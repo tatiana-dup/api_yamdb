@@ -1,11 +1,11 @@
 from django.contrib import admin
 
 from reviews.models import (
-    Category, 
-    Genre, 
-    GenreTitle, 
-    Title, 
-    Review, 
+    Category,
+    Genre,
+    GenreTitle,
+    Title,
+    Review,
     Comment,
 )
 
@@ -33,17 +33,19 @@ class GenreTitleInline(admin.TabularInline):
 
 @admin.register(Title)
 class TitleAdmin(admin.ModelAdmin):
-    list_display = ('name', 'year', 'category', 'description', 'genre_list')
+    list_display = ('name', 'year', 'category', 'description')
     list_display_links = ('name',)
     search_fields = ('name', 'category')
     list_filter = ('year', 'category')
     inlines = [GenreTitleInline]
+
 
 @admin.register(Review)
 class ReviewAdmin(admin.ModelAdmin):
     list_display = ('pk', 'author', 'text', 'pub_date')
     search_fields = ('author', 'text')
     list_filter = ('author', 'pub_date')
+
 
 @admin.register(Comment)
 class CommentAdmin(admin.ModelAdmin):

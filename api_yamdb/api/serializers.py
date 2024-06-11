@@ -2,8 +2,8 @@ from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
 
 from reviews.models import (
-    Category, 
-    Genre, 
+    Category,
+    Genre,
     Title,
     Review,
     Comment,
@@ -49,7 +49,7 @@ class ReviewSerializer(serializers.ModelSerializer):
                 'Оценка не попадает в допустимый диапазон'
             )
         return value
-    
+
     class Meta:
         fields = '__all__'
         model = Review
