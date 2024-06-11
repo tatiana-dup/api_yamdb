@@ -26,7 +26,7 @@ class GenreTitleInline(admin.TabularInline):
 
 @admin.register(Title)
 class TitleAdmin(admin.ModelAdmin):
-    list_display = ('name', 'year', 'category', 'description', 'genre_list')
+    list_display = ('name', 'year', 'category', 'description')
     list_display_links = ('name',)
     search_fields = ('name', 'category')
     list_filter = ('year', 'category')
