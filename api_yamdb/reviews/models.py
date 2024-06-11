@@ -3,7 +3,7 @@ from django.db import models
 from django.utils import timezone
 
 
-TEXT_LENGTH = 50
+TEXT_LENGTH = 20
 
 
 class BaseCategoryGenre(models.Model):
@@ -22,15 +22,21 @@ class BaseCategoryGenre(models.Model):
         abstract = True
 
     def __str__(self):
-        return self.name
+        return self.name[:TEXT_LENGTH]
 
 
 class Category(BaseCategoryGenre):
-    ...
+
+    class Meta:
+        verbose_name = 'категория'
+        verbose_name_plural = 'Категории'
 
 
 class Genre(BaseCategoryGenre):
-    ...
+
+    class Meta:
+        verbose_name = 'жанр'
+        verbose_name_plural = 'Жанры'
 
 
 class Title(models.Model):
@@ -42,11 +48,16 @@ class Title(models.Model):
     description = models.TextField('Описание', null=True, blank=True)
     genre = models.ManyToManyField('Slug жанра', Genre, through='GenreTitle')
     category = models.ForeignKey(
-        'Slug категории', Category, on_delete=models.CASCADE
+        'Slug категории', Category, on_delete=models.SET_NULL, null=True,
+        related_name='titles'
     )
 
+    class Meta:
+        verbose_name = 'произведение'
+        verbose_name_plural = 'Произведения'
+
     def __str__(self):
-        return self.name
+        return self.name[:TEXT_LENGTH]
 
 
 class GenreTitle(models.Model):
