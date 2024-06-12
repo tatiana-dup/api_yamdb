@@ -59,6 +59,7 @@ class Migration(migrations.Migration):
                 'verbose_name_plural': 'Произведения',
             },
         ),
+
         migrations.AddField(
             model_name='genretitle',
             name='title',

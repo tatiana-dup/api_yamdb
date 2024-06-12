@@ -2,9 +2,17 @@ import re
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
+from rest_framework.validators import UniqueTogetherValidator
 
 from api.utils import send_conform_mail
-from reviews.models import Category, Genre, Title
+from reviews.const import MAX_SCORE_VALUE, MIN_SCORE_VALUE
+from reviews.models import (
+    Category,
+    Comment,
+    Genre,
+    Review,
+    Title,
+)
 
 
 User = get_user_model()
@@ -84,3 +92,50 @@ class TitleSerializer(serializers.ModelSerializer):
     class Meta:
         model = Title
         fields = '__all__'
+
+
+class ReviewSerializer(serializers.ModelSerializer):
+    author = serializers.SlugRelatedField(
+        slug_field='username',
+        read_only=True,
+        default=serializers.CurrentUserDefault(),
+    )
+    title = serializers.SlugRelatedField(
+        slug_field='name',
+        read_only=True,
+    )
+
+    def validate_score(self, value):
+        if MIN_SCORE_VALUE < value < MAX_SCORE_VALUE:
+            raise serializers.ValidationError(
+                'Оценка не попадает в допустимый диапазон'
+            )
+        return value
+
+    class Meta:
+        fields = '__all__'
+        model = Review
+        read_only_fields = ('pub_date',)
+        validators = [
+            UniqueTogetherValidator(
+                queryset=Review.objects.all(),
+                fields=('author', 'review'),
+                message='Ты оставлял отзыв к этому произведению.'
+            ),
+        ]
+
+
+class CommentSerializer(serializers.ModelSerializer):
+    author = serializers.SlugRelatedField(
+        slug_field='username',
+        read_only=True,
+    )
+    review = serializers.SlugRelatedField(
+        slug_field='text',
+        read_only=True,
+    )
+
+    class Meta:
+        model = Comment
+        fields = '__all__'
+        read_only_fields = ('pub_date')
