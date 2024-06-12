@@ -1,4 +1,5 @@
 from django.contrib.auth import get_user_model
+from django.db.models import Avg
 from django.shortcuts import get_object_or_404
 from rest_framework import mixins, status, viewsets
 from rest_framework.filters import SearchFilter
@@ -6,6 +7,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 
+from api.permissions import AdminOrReadOnly
 from api.serializers import (
     CategorySerializer,
     CommentSerializer,
@@ -13,6 +15,7 @@ from api.serializers import (
     ReviewSerializer,
     SignupSerializer,
     TitleSerializer,
+    TitleSerializerWrite,
     UsersForAdminSerializer
 )
 from reviews.models import Category, Genre, Title, Review
@@ -44,19 +47,41 @@ class CreateOrListUsersByAdminViewSet(mixins.CreateModelMixin,
     search_fields = ('username',)
 
 
-class CategoryViewSet(viewsets.ModelViewSet):
+class CategoryViewSet(mixins.CreateModelMixin,
+                      mixins.DestroyModelMixin,
+                      mixins.ListModelMixin,
+                      viewsets.GenericViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
+    permission_classes = (AdminOrReadOnly,)
+    filter_backends = (SearchFilter,)
+    search_fields = ('name',)
 
 
-class GenreViewSet(viewsets.ModelViewSet):
+class GenreViewSet(mixins.CreateModelMixin,
+                   mixins.DestroyModelMixin,
+                   mixins.ListModelMixin,
+                   viewsets.GenericViewSet):
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
+    permission_classes = (AdminOrReadOnly,)
+    filter_backends = (SearchFilter,)
+    search_fields = ('name',)
 
 
 class TitleViewSet(viewsets.ModelViewSet):
     queryset = Title.objects.all()
-    serializer_class = TitleSerializer
+    permission_classes = (AdminOrReadOnly,)
+    filter_backends = (SearchFilter,)
+    search_fields = ('name',)
+
+    def get_queryset(self):
+        return Title.objects.annotate(rating=Avg('reviews__score'))
+
+    def get_serializer_class(self):
+        if self.action in ('create', 'partial_update'):
+            return TitleSerializerWrite
+        return TitleSerializer
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
