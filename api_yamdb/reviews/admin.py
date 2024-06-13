@@ -2,11 +2,11 @@ from django.contrib import admin
 
 from reviews.models import (
     Category,
+    Comment,
     Genre,
     GenreTitle,
-    Title,
     Review,
-    Comment,
+    Title,
 )
 
 

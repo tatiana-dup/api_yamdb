@@ -1,16 +1,18 @@
 from django.core.validators import (
-    MaxValueValidator,
     RegexValidator,
-    MinValueValidator
+    MaxValueValidator,
+    MinValueValidator,
 )
 from django.db import models
 from django.utils import timezone
 
 from users.models import MdbUser
-from .const import DEFAULT_VALUE, MAX_SCORE_VALUE, MIN_SCORE_VALUE
-
-
-TEXT_LENGTH = 20
+from reviews.const import (
+    DEFAULT_VALUE,
+    MAX_SCORE_VALUE,
+    MIN_SCORE_VALUE,
+    TEXT_LENGTH,
+)    
 
 
 class BaseCategoryGenre(models.Model):
@@ -116,7 +118,7 @@ class Review(models.Model):
         )
 
     def __str__(self):
-        return self.text[:TEXT_LENGTH]
+        return f'Отзыв от {self.author.username} к {self.title}'
 
 
 class Comment(models.Model):
@@ -141,4 +143,4 @@ class Comment(models.Model):
         verbose_name_plural = 'Комментарии'
 
     def __str__(self):
-        return self.text[:TEXT_LENGTH]
+        return f'Комментарий от {self.author.username} к {self.review}'
