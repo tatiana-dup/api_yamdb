@@ -1,8 +1,12 @@
+import jwt
 import re
+from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from rest_framework.validators import UniqueTogetherValidator
+from rest_framework_simplejwt.tokens import RefreshToken
 
 from api.utils import send_conform_mail
 from reviews.const import MAX_SCORE_VALUE, MIN_SCORE_VALUE
@@ -29,7 +33,8 @@ class SignupSerializer(serializers.Serializer):
         pattern = r'^[\w.@+-]+\Z'
         if not re.match(pattern, value):
             raise ValidationError(
-                f"Юзернейм {value} не соответствует паттерну {pattern}.")
+                "В юзернейме допустимо использовать только "
+                "латинские буквы, цифры или @/./+/-/_ .")
         return value
 
     def validate(self, data):
@@ -71,6 +76,43 @@ class UsersForAdminSerializer(serializers.ModelSerializer):
         model = User
         fields = (
             'username', 'email', 'first_name', 'last_name', 'bio', 'role')
+
+
+class ObtainTokenSerializer(serializers.Serializer):
+    username = serializers.CharField(max_length=150)
+    confirmation_code = serializers.CharField(max_length=255)
+
+    def validate_username(self, value):
+        self.user = get_object_or_404(User, username=value)
+        return value
+
+    def validate_confirmation_code(self, value):
+        try:
+            payload = jwt.decode(
+                value, settings.SECRET_KEY, algorithms=['HS256'])
+        except jwt.ExpiredSignatureError:
+            raise serializers.ValidationError("Код подтверждения истек.")
+        except jwt.InvalidTokenError:
+            raise serializers.ValidationError(
+                "Недействительный код подтверждения.")
+
+        self.username = payload.get('username')
+        return value
+
+    def validate(self, data):
+        if data.get('username') != self.username:
+            raise serializers.ValidationError(
+                "Неверный код подтверждения или юзернейм.")
+        data['user'] = self.user
+        return data
+
+    def get_token_for_user(self, user):
+        refresh = RefreshToken.for_user(user)
+        refresh['write'] = user.role
+
+        return {
+            'token': str(refresh.access_token),
+        }
 
 
 class CategorySerializer(serializers.ModelSerializer):
