@@ -209,6 +209,7 @@ class ReviewSerializer(serializers.ModelSerializer):
         fields = (
             'id',
             'text',
+            'author',
             'score',
             'pub_date',
         )
