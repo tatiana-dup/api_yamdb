@@ -12,7 +12,7 @@ from reviews.const import (
     MAX_SCORE_VALUE,
     MIN_SCORE_VALUE,
     TEXT_LENGTH,
-)    
+)
 
 
 class BaseCategoryGenre(models.Model):
