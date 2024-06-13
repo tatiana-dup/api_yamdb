@@ -98,28 +98,29 @@ class ReviewSerializer(serializers.ModelSerializer):
     author = serializers.SlugRelatedField(
         slug_field='username',
         read_only=True,
-        default=serializers.CurrentUserDefault(),
-    )
-    title = serializers.SlugRelatedField(
-        slug_field='name',
-        read_only=True,
     )
 
     def validate_score(self, value):
         if MIN_SCORE_VALUE < value < MAX_SCORE_VALUE:
             raise serializers.ValidationError(
-                'Оценка не попадает в допустимый диапазон'
+                f'Оценка не попадает в допустимый диапазон: {MIN_SCORE_VALUE}'
+                f': {MAX_SCORE_VALUE}'
             )
         return value
 
     class Meta:
-        fields = '__all__'
+        fields = (
+            'id',
+            'text',
+            'score',
+            'pub_date',
+        )
         model = Review
         read_only_fields = ('pub_date',)
         validators = [
             UniqueTogetherValidator(
                 queryset=Review.objects.all(),
-                fields=('author', 'review'),
+                fields=('author', 'title'),
                 message='Ты оставлял отзыв к этому произведению.'
             ),
         ]
@@ -129,13 +130,15 @@ class CommentSerializer(serializers.ModelSerializer):
     author = serializers.SlugRelatedField(
         slug_field='username',
         read_only=True,
-    )
-    review = serializers.SlugRelatedField(
-        slug_field='text',
-        read_only=True,
+        default=serializers.CurrentUserDefault()
     )
 
     class Meta:
         model = Comment
-        fields = '__all__'
+        fields = (
+            'id',
+            'text',
+            'author',
+            'pub_date',
+        )
         read_only_fields = ('pub_date')
