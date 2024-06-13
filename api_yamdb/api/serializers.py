@@ -5,7 +5,6 @@ from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
-from rest_framework.validators import UniqueTogetherValidator
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from api.utils import send_conform_mail
@@ -158,18 +157,36 @@ class TitleSerializerWrite(serializers.ModelSerializer):
 
 
 class ReviewSerializer(serializers.ModelSerializer):
+    """Формирование информации об отзыве."""
+
     author = serializers.SlugRelatedField(
         slug_field='username',
         read_only=True,
     )
 
     def validate_score(self, value):
-        if MIN_SCORE_VALUE < value < MAX_SCORE_VALUE:
+        if (value > MAX_SCORE_VALUE or value < MIN_SCORE_VALUE):
             raise serializers.ValidationError(
                 f'Оценка не попадает в допустимый диапазон: {MIN_SCORE_VALUE}'
                 f': {MAX_SCORE_VALUE}'
             )
         return value
+
+    def validate(self, data):
+        if (
+                Review.objects.filter(
+                    title=get_object_or_404(
+                        Title,
+                        pk=self.context.get('view').kwargs.get('title_id')
+                    ),
+                    author=self.context['request'].user
+                ).exists()
+                and self.context['request'].method == 'POST'
+        ):
+            raise serializers.ValidationError(
+                'Для этого произведения ты уже сделал отзыв!'
+            )
+        return data
 
     class Meta:
         fields = (
@@ -181,16 +198,11 @@ class ReviewSerializer(serializers.ModelSerializer):
         )
         model = Review
         read_only_fields = ('pub_date',)
-        validators = [
-            UniqueTogetherValidator(
-                queryset=Review.objects.all(),
-                fields=('author', 'title'),
-                message='Ты оставлял отзыв к этому произведению.'
-            ),
-        ]
 
 
 class CommentSerializer(serializers.ModelSerializer):
+    """Формирование информации о комменте."""
+
     author = serializers.SlugRelatedField(
         slug_field='username',
         read_only=True,
@@ -205,4 +217,4 @@ class CommentSerializer(serializers.ModelSerializer):
             'author',
             'pub_date',
         )
-        read_only_fields = ('pub_date')
+        read_only_fields = ('pub_date',)
