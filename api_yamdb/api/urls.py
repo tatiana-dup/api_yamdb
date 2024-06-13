@@ -5,6 +5,7 @@ from api.views import (CategoryViewSet,
                        CommentViewSet,
                        CreateOrListUsersByAdminViewSet,
                        GenreViewSet,
+                       ObtainTokenView,
                        ReviewViewSet,
                        TitleViewSet,
                        UserSignupView)
@@ -28,5 +29,6 @@ router_v1.register('users', CreateOrListUsersByAdminViewSet, basename='users')
 
 urlpatterns = [
     path('v1/auth/signup/', UserSignupView.as_view(), name='signup'),
+    path('v1/auth/token/', ObtainTokenView.as_view(), name='token_obtain'),
     path('v1/', include(router_v1.urls)),
 ]

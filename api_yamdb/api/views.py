@@ -6,9 +6,11 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 
+# from api.permissions_test import RolePermission
 from api.serializers import (
     CategorySerializer,
     CommentSerializer,
+    ObtainTokenSerializer,
     GenreSerializer,
     ReviewSerializer,
     SignupSerializer,
@@ -39,9 +41,20 @@ class CreateOrListUsersByAdminViewSet(mixins.CreateModelMixin,
                                       viewsets.GenericViewSet):
     queryset = User.objects.all()
     serializer_class = UsersForAdminSerializer
-    # permission_classes = Нужен пермишен для пользователя с ролью админа
+    # permission_classes = (RolePermission,)
+    # required_roles = ['admin',]
     filter_backends = (SearchFilter,)
     search_fields = ('username',)
+
+
+class ObtainTokenView(APIView):
+    def post(self, request):
+        serializer = ObtainTokenSerializer(data=request.data)
+        if serializer.is_valid():
+            user = serializer.validated_data['user']
+            token = serializer.get_token_for_user(user)
+            return Response(token, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class CategoryViewSet(viewsets.ModelViewSet):
