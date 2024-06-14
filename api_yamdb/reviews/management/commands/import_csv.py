@@ -10,7 +10,9 @@ class Command(BaseCommand):
     help = 'Import CSV files into the database'
 
     def add_arguments(self, parser):
-        parser.add_argument('directory', type=str, help='Directory containing CSV files')
+        parser.add_argument(
+            'directory', type=str, help='Directory containing CSV files'
+        )
 
     @transaction.atomic
     def handle(self, *args, **kwargs):
@@ -42,7 +44,9 @@ class Command(BaseCommand):
                     name=row['name'],
                     slug=row['slug']
                 )
-        self.stdout.write(self.style.SUCCESS(f'Successfully imported {filepath}'))
+        self.stdout.write(
+            self.style.SUCCESS(f'Successfully imported {filepath}')
+        )
 
     def import_comments(self, filepath):
         with open(filepath, newline='', encoding='utf-8') as csvfile:
@@ -55,7 +59,9 @@ class Command(BaseCommand):
                     author_id=row['author'],
                     pub_date=row['pub_date']
                 )
-        self.stdout.write(self.style.SUCCESS(f'Successfully imported {filepath}'))
+        self.stdout.write(
+            self.style.SUCCESS(f'Successfully imported {filepath}')
+        )
 
     def import_genre_titles(self, filepath):
         with open(filepath, newline='', encoding='utf-8') as csvfile:
@@ -66,7 +72,9 @@ class Command(BaseCommand):
                     title_id=row['title_id'],
                     genre_id=row['genre_id']
                 )
-        self.stdout.write(self.style.SUCCESS(f'Successfully imported {filepath}'))
+        self.stdout.write(
+            self.style.SUCCESS(f'Successfully imported {filepath}')
+        )
 
     def import_genres(self, filepath):
         with open(filepath, newline='', encoding='utf-8') as csvfile:
@@ -77,7 +85,9 @@ class Command(BaseCommand):
                     name=row['name'],
                     slug=row['slug']
                 )
-        self.stdout.write(self.style.SUCCESS(f'Successfully imported {filepath}'))
+        self.stdout.write(
+            self.style.SUCCESS(f'Successfully imported {filepath}')
+        )
 
     def import_reviews(self, filepath):
         with open(filepath, newline='', encoding='utf-8') as csvfile:
@@ -91,7 +101,9 @@ class Command(BaseCommand):
                     score=row['score'],
                     pub_date=row['pub_date']
                 )
-        self.stdout.write(self.style.SUCCESS(f'Successfully imported {filepath}'))
+        self.stdout.write(
+            self.style.SUCCESS(f'Successfully imported {filepath}')
+        )
 
     def import_titles(self, filepath):
         with open(filepath, newline='', encoding='utf-8') as csvfile:
@@ -103,7 +115,9 @@ class Command(BaseCommand):
                     year=row['year'],
                     category_id=row['category']
                 )
-        self.stdout.write(self.style.SUCCESS(f'Successfully imported {filepath}'))
+        self.stdout.write(
+            self.style.SUCCESS(f'Successfully imported {filepath}')
+        )
 
     def import_users(self, filepath):
         with open(filepath, newline='', encoding='utf-8') as csvfile:
@@ -118,4 +132,6 @@ class Command(BaseCommand):
                     first_name=row['first_name'],
                     last_name=row['last_name']
                 )
-        self.stdout.write(self.style.SUCCESS(f'Successfully imported {filepath}'))
+        self.stdout.write(
+            self.style.SUCCESS(f'Successfully imported {filepath}')
+        )
