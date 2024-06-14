@@ -260,7 +260,7 @@ http://127.0.0.1:8000/api/v1/titles/{title_id}/reviews/{review_id}/
 http://127.0.0.1:8000/api/v1/titles/{title_id}/reviews/{review_id}/
 При удачном удалении вернет статус 204
 
-### GET запрос для списка комментарией
+### GET запрос для списка комментариев
 http://127.0.0.1:8000/api/v1/titles/{title_id}/reviews/{review_id}/comments/
 В результате получим список всех комментариев с пагинацией
 ```
