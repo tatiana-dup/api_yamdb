@@ -252,6 +252,18 @@ class ReviewSerializer(serializers.ModelSerializer):
         slug_field='username',
         read_only=True,
     )
+    
+    def get_title(self):
+        return get_object_or_404(
+            Title,
+            pk=self.context.get('view').kwargs.get('title_id')
+        )
+    
+    def get_user(self):
+        return self.context['request'].user
+    
+    def get_method(self):
+        return self.context['request'].method
 
     def validate_score(self, value):
         if (value > MAX_SCORE_VALUE or value < MIN_SCORE_VALUE):
@@ -264,13 +276,10 @@ class ReviewSerializer(serializers.ModelSerializer):
     def validate(self, data):
         if (
                 Review.objects.filter(
-                    title=get_object_or_404(
-                        Title,
-                        pk=self.context.get('view').kwargs.get('title_id')
-                    ),
-                    author=self.context['request'].user
+                    title=self.get_title(),
+                    author=self.get_user()
                 ).exists()
-                and self.context['request'].method == 'POST'
+                and self.get_method() == 'POST'
         ):
             raise serializers.ValidationError(
                 'Для этого произведения ты уже сделал отзыв!'
@@ -295,7 +304,6 @@ class CommentSerializer(serializers.ModelSerializer):
     author = serializers.SlugRelatedField(
         slug_field='username',
         read_only=True,
-        default=serializers.CurrentUserDefault()
     )
 
     class Meta:
