@@ -1,16 +1,17 @@
 from django.contrib.auth import get_user_model
 from django.db.models import Avg
-from django_filters.rest_framework import DjangoFilterBackend
 from django.shortcuts import get_object_or_404
+from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import MethodNotAllowed
-from rest_framework.filters import SearchFilter
+from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 
+from api.filters import TitleFilter
 from api.permissions import AdminOnly, AdminOrReadOnly
 # from api.permissions_test import RolePermission
 from api.serializers import (
@@ -92,29 +93,35 @@ class CategoryViewSet(mixins.CreateModelMixin,
                       mixins.DestroyModelMixin,
                       mixins.ListModelMixin,
                       viewsets.GenericViewSet):
-    queryset = Category.objects.all()
+    queryset = Category.objects.all().order_by('id')
     serializer_class = CategorySerializer
     permission_classes = (AdminOrReadOnly,)
     filter_backends = (SearchFilter,)
     search_fields = ('name',)
+    lookup_field = 'slug'
+    ordering = ('id',)
 
 
 class GenreViewSet(mixins.CreateModelMixin,
                    mixins.DestroyModelMixin,
                    mixins.ListModelMixin,
                    viewsets.GenericViewSet):
-    queryset = Genre.objects.all()
+    queryset = Genre.objects.all().order_by('id')
     serializer_class = GenreSerializer
     permission_classes = (AdminOrReadOnly,)
     filter_backends = (SearchFilter,)
     search_fields = ('name',)
+    lookup_field = 'slug'
+    ordering = ('id',)
 
 
 class TitleViewSet(viewsets.ModelViewSet):
     queryset = Title.objects.all()
     permission_classes = (AdminOrReadOnly,)
-    filter_backends = (DjangoFilterBackend,)
-    filterset_fields = ('name', 'year', 'category__slug', 'genre__slug')
+    http_method_names = ('get', 'post', 'patch', 'delete')
+    filter_backends = (DjangoFilterBackend, OrderingFilter,)
+    filterset_class = TitleFilter
+    ordering = ('id',)
 
     def get_queryset(self):
         return Title.objects.annotate(rating=Avg('reviews__score'))
