@@ -12,7 +12,7 @@ from rest_framework.views import APIView
 
 
 from api.filters import TitleFilter
-from api.permissions import AdminOnly, AdminOrReadOnly
+from api.permissions import AdminOnly, AdminOrReadOnly, AllowedToEditOrReadOnly
 from api.serializers import (
     CategorySerializer,
     CommentSerializer,
@@ -25,29 +25,64 @@ from api.serializers import (
     UsersForAdminSerializer,
     UsersForMeSerializer
 )
-from reviews.models import Category, Genre, Title, Review
-from api.permissions import AllowedToEditOrReadOnly
+from api.utils import send_conform_mail
+from reviews.models import Category, Genre, Review, Title
 
 
 User = get_user_model()
 
 
 class UserSignupView(APIView):
-    """Класс для обработки запроса на получение кода подтверждения."""
+    """
+    Класс для обработки запроса на получение кода подтверждения.
+    - если пользователя с полученными данными не существует, то он будет
+    создан, и на его email отправлено письмо с кодом подтверждения;
+    - если пользователь уже существует, то на его email будет отправлено письмо
+    с кодом подтверждения.
+    """
     def post(self, request):
         serializer = SignupSerializer(data=request.data)
         if serializer.is_valid():
-            try:
-                user = serializer.save()
-                response_data = {
-                    "email": user.email,
-                    "username": user.username
-                }
-                return Response(response_data, status=status.HTTP_200_OK)
-            except ValidationError as e:
-                return Response({"detail": e.detail},
-                                status=status.HTTP_400_BAD_REQUEST)
+            email = serializer.validated_data['email']
+            username = serializer.validated_data['username']
+
+            user = self.get_or_create_user(email, username)
+            send_conform_mail(user)
+            response_data = {
+                "email": user.email,
+                "username": user.username
+            }
+            return Response(response_data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def get_or_create_user(self, email, username):
+        user_by_email = User.objects.filter(email=email).first()
+        user_by_username = User.objects.filter(username=username).first()
+
+        if (
+            (user_by_email and user_by_email.username != username)
+            and (user_by_username and user_by_username.email != email)
+        ):
+            raise ValidationError({
+                "email": [
+                    f"Емейл {email} не соответствует указанному юзернейм."],
+                "username": [
+                    f"Юзернейм {username} не соответствует указанному емейл."]
+            })
+
+        if user_by_email and user_by_email.username != username:
+            raise ValidationError(
+                {"email": ["Пользователь с таким емейл уже существует, "
+                           "введите верный юзернейм."]})
+        if user_by_username and user_by_username.email != email:
+            raise ValidationError(
+                {"username": [f"Юзернейм {username} уже занят, "
+                              "выберите другой юзернейм."]})
+
+        if user_by_email and user_by_email.username == username:
+            return user_by_email
+
+        return User.objects.create(email=email, username=username)
 
 
 class UsersViewSet(viewsets.ModelViewSet):

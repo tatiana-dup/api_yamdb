@@ -2,14 +2,12 @@ import jwt
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.validators import RegexValidator
-from django.db import IntegrityError, transaction
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
-from rest_framework.validators import UniqueTogetherValidator
+from rest_framework.validators import UniqueValidator
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from api.utils import send_conform_mail
 from reviews.const import MAX_SCORE_VALUE, MIN_SCORE_VALUE
 from reviews.models import (
     Category,
@@ -25,11 +23,7 @@ User = get_user_model()
 
 class SignupSerializer(serializers.Serializer):
     """
-    Сериализатор для получения кода подтверждения по email и username:
-    - если пользователя с полученными данными не существует, то он будет
-    создан, и на его email отправлено письмо с кодом подтверждения;
-    - если пользователь уже существует, то на его email будет отправлено письмо
-    с кодом подтверждения.
+    Сериализатор для обработки запроса на получение кода подтверждения.
     """
     email = serializers.EmailField(max_length=254)
     username = serializers.CharField(
@@ -42,102 +36,42 @@ class SignupSerializer(serializers.Serializer):
     def validate_username(self, value):
         if value.lower() == "me":
             raise ValidationError(
-                "Вы не можете выбрать юзернейм me, выберите другой юзернейм.")
+                "Вы не можете выбрать юзернейм 'me', "
+                "выберите другой юзернейм.")
         return value
-
-    def validate(self, data):
-        email = data.get('email')
-        username = data.get('username')
-
-        user_by_email = User.objects.filter(email=email).first()
-        user_by_username = User.objects.filter(username=username).first()
-
-        if (
-            (user_by_email and user_by_email.username != username)
-            and (user_by_username and user_by_username.email != email)
-        ):
-            raise ValidationError({"email": f"Емейл {email} не "
-                                   "соответсвует указанному юзернейм.",
-                                   "username": f"Юзернейм {username} "
-                                   "не соответсвует указанному емейл."
-                                   })
-
-        if user_by_email and user_by_email.username != username:
-            raise ValidationError({"email": "Пользователь с таким емейл уже "
-                                   "существует, введите верный юзернейм."})
-        if user_by_username and user_by_username.email != email:
-            raise ValidationError({"username": f"Юзернейм {username} уже "
-                                   "занят, выберите другой юзернейм."})
-        return data
-
-    def create(self, validated_data):
-        email = validated_data['email']
-        username = validated_data['username']
-
-        user_by_data = User.objects.filter(
-            email=email, username=username).first()
-
-        if user_by_data:
-            send_conform_mail(user_by_data)
-            return user_by_data
-
-        user_by_email = User.objects.filter(email=email).first()
-        user_by_username = User.objects.filter(username=username).first()
-
-        if user_by_email and user_by_email.username != username:
-            raise ValidationError({"email": "Пользователь с таким емейл уже "
-                                   "существует, введите верный юзернейм."})
-        if user_by_username and user_by_username.email != email:
-            raise ValidationError({"username": f"Юзернейм {username} уже "
-                                   "занят, выберите другой юзернейм."})
-
-        try:
-            with transaction.atomic():
-                user = User.objects.create(
-                    email=email,
-                    username=username
-                )
-                send_conform_mail(user)
-                return user
-        except IntegrityError:
-            raise ValidationError("Пользователь с таким емейл или "
-                                  "юзернеймом уже существует.")
 
 
 class UsersSerializer(serializers.ModelSerializer):
     """Базовый сериализатор для модели пользователя."""
+    username = serializers.CharField(
+        max_length=150,
+        validators=[
+            RegexValidator(
+                regex=r'^[\w.@+-]+\Z',
+                message=("В юзернейме допустимо использовать только "
+                         "латинские буквы, цифры или @/./+/-/_ .")),
+            UniqueValidator(queryset=User.objects.all(),
+                            message='Этот юзернейм уже занят.')
+        ])
+    email = serializers.EmailField(
+        max_length=254,
+        validators=[
+            UniqueValidator(queryset=User.objects.all(),
+                            message='Этот емейл уже занят.')
+        ])
+    first_name = serializers.CharField(max_length=150, required=False)
+    last_name = serializers.CharField(max_length=150, required=False)
+
     def validate_username(self, value):
         if value.lower() == "me":
             raise ValidationError(
                 "Вы не можете выбрать юзернейм me, выберите другой юзернейм.")
         return value
 
-    def validate(self, data):
-        email = data.get('email')
-        username = data.get('username')
-
-        user_by_email = User.objects.filter(email=email).first()
-        user_by_username = User.objects.filter(username=username).first()
-
-        if user_by_email and user_by_email.username != username:
-            raise ValidationError({"email": "Пользователь с таким емейл уже "
-                                   "существует, введите верный юзернейм."})
-        if user_by_username and user_by_username.email != email:
-            raise ValidationError({"username": f"Юзернейм {username} уже "
-                                   "занят, выберите другой юзернейм."})
-        return data
-
     class Meta:
         model = User
         fields = (
             'username', 'email', 'first_name', 'last_name', 'bio', 'role')
-        validators = [
-            UniqueTogetherValidator(
-                queryset=User.objects.all(),
-                fields=['email', 'username'],
-                message="Пользователь с таким email и username уже существует."
-            )
-        ]
 
 
 class UsersForAdminSerializer(UsersSerializer):
@@ -152,16 +86,6 @@ class UsersForMeSerializer(UsersSerializer):
     Сериализатор для модели пользователя, предназначенный для запросов,
     полученных от обычного пользователя.
     """
-    username = serializers.CharField(
-        max_length=150,
-        validators=[RegexValidator(
-            regex=r'^[\w.@+-]+\Z',
-            message=("В юзернейме допустимо использовать только "
-                     "латинские буквы, цифры или @/./+/-/_ ."))])
-    email = serializers.EmailField(max_length=254)
-    first_name = serializers.CharField(max_length=150)
-    last_name = serializers.CharField(max_length=150)
-
     class Meta(UsersSerializer.Meta):
         read_only_fields = ('role',)
 
