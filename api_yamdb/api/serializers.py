@@ -252,16 +252,16 @@ class ReviewSerializer(serializers.ModelSerializer):
         slug_field='username',
         read_only=True,
     )
-    
+
     def get_title(self):
         return get_object_or_404(
             Title,
             pk=self.context.get('view').kwargs.get('title_id')
         )
-    
+
     def get_user(self):
         return self.context['request'].user
-    
+
     def get_method(self):
         return self.context['request'].method
 
@@ -296,6 +296,7 @@ class ReviewSerializer(serializers.ModelSerializer):
         )
         model = Review
         read_only_fields = ('pub_date',)
+        extra_kwargs = {'score': {'required': True}}
 
 
 class CommentSerializer(serializers.ModelSerializer):
