@@ -63,6 +63,254 @@ python manage.py runserver
 ```
 
 ## Примеры запросов:
+
+### GET запрос для списка  категория
+http://127.0.0.1:8000/api/v1/categories/
+В результате получим список всех категорий с пагинацией
+
+```
+{
+  "count": 0,
+  "next": "string",
+  "previous": "string",
+  "results": [
+    {
+      "name": "string",
+      "slug": "^-$"
+    }
+  ]
+}
+```
+
+### POST запрос для добавления новой категории
+http://127.0.0.1:8000/api/v1/categories/
+
+Формат запроса/ответа
+```
+{
+  "name": "string",
+  "slug": "^-$"
+}
+```
+
+### DELETE запрос для удаления категории
+http://127.0.0.1:8000/api/v1/categories/{slug}/
+При удачном удалении вернет статус 204
+
+### GET запрос для списка  жанров
+http://127.0.0.1:8000/api/v1/genres/
+В результате получим список всех жанров с пагинацией
+
+```
+{
+  "count": 0,
+  "next": "string",
+  "previous": "string",
+  "results": [
+    {
+      "name": "string",
+      "slug": "^-$"
+    }
+  ]
+}
+```
+
+### POST запрос для добавления нового жанра
+http://127.0.0.1:8000/api/v1/genres/
+
+Формат запроса/ответа
+```
+{
+  "name": "string",
+  "slug": "^-$"
+}
+```
+
+### DELETE запрос для удаления жанра
+http://127.0.0.1:8000/api/v1/genres/{slug}/
+При удачном удалении вернет статус 204
+
+### GET запрос для списка произведений
+http://127.0.0.1:8000/api/v1/titles/
+В результате получим список всех произведений с пагинацией
+
+```
+{
+"count": 0,
+"next": "string",
+"previous": "string",
+"results": [
+{}
+]
+}
+```
+
+### POST запрос для добавления нового произведения
+http://127.0.0.1:8000/api/v1/titles/
+
+Формат запроса/ответа
+```
+{
+  "name": "string",
+  "year": 0,
+  "description": "string",
+  "genre": [
+    "string"
+  ],
+  "category": "string"
+}
+```
+
+### GET запрос для получения произведения по идентификатору
+http://127.0.0.1:8000/api/v1/titles/{titles_id}/
+Ответ
+```
+{
+  "id": 0,
+  "name": "string",
+  "year": 0,
+  "rating": 0,
+  "description": "string",
+  "genre": [
+    {
+      "name": "string",
+      "slug": "^-$"
+    }
+  ],
+  "category": {
+    "name": "string",
+    "slug": "^-$"
+  }
+}
+```
+
+### PATCH запрос для частичного обновления произведения
+http://127.0.0.1:8000/api/v1/titles/{titles_id}/
+
+```
+{
+  "name": "string",
+  "year": 0,
+  "description": "string",
+  "genre": [
+    "string"
+  ],
+  "category": "string"
+}
+```
+
+### DELETE запрос для удаления произведения
+http://127.0.0.1:8000/api/v1/titles/{titles_id}/
+При удачном удалении вернет статус 204
+
+### GET запрос для списка отзывов
+http://127.0.0.1:8000/api/v1/titles/{title_id}/reviews/
+В результате получим список всех отзывов с пагинацией
+
+```
+{
+"count": 0,
+"next": "string",
+"previous": "string",
+"results": [
+{}
+]
+}
+```
+### POST запрос для добавления нового отзыва
+http://127.0.0.1:8000/api/v1/titles/{title_id}/reviews/
+Запрос
+```
+{
+  "text": "string",
+  "score": 1
+}
+```
+
+Ответ
+```
+{
+  "text": "string",
+  "score": 1
+}
+```
+
+### GET запрос для получения отзыва по идентификатору
+http://127.0.0.1:8000/api/v1/titles/{title_id}/reviews/{review_id}/
+Ответ
+```
+{
+  "id": 0,
+  "text": "string",
+  "author": "string",
+  "score": 1,
+  "pub_date": "2019-08-24T14:15:22Z"
+}
+```
+### PATCH запрос для частичного обновления отзыва
+http://127.0.0.1:8000/api/v1/titles/{title_id}/reviews/{review_id}/
+
+```
+{
+  "text": "string",
+  "score": 1
+}
+```
+### DELETE запрос для удаления отзыва
+http://127.0.0.1:8000/api/v1/titles/{title_id}/reviews/{review_id}/
+При удачном удалении вернет статус 204
+
+### GET запрос для списка комментарией
+http://127.0.0.1:8000/api/v1/titles/{title_id}/reviews/{review_id}/comments/
+В результате получим список всех комментариев с пагинацией
+```
+{
+  "count": 0,
+  "next": "string",
+  "previous": "string",
+  "results": [
+    {
+      "id": 0,
+      "text": "string",
+      "author": "string",
+      "pub_date": "2019-08-24T14:15:22Z"
+    }
+  ]
+}
+```
+### POST запрос для добавления нового комментария
+http://127.0.0.1:8000/api/v1/titles/{title_id}/reviews/{review_id}/comments/
+
+```
+{
+  "text": "string"
+}
+```
+
+### GET запрос для получения комментария по идентификатору
+http://127.0.0.1:8000/api/v1/titles/{title_id}/reviews/{review_id}/comments/{comment_id}/
+
+```
+{
+  "id": 0,
+  "text": "string",
+  "author": "string",
+  "pub_date": "2019-08-24T14:15:22Z"
+}
+```
+### PATCH запрос для частичного обновления комментария
+http://127.0.0.1:8000/api/v1/titles/{title_id}/reviews/{review_id}/comments/{comment_id}/
+
+```
+{
+  "text": "string"
+}
+```
+### DELETE запрос для удаления комментария
+http://127.0.0.1:8000/api/v1/titles/{title_id}/reviews/{review_id}/comments/{comment_id}/
+
+При удачном удалении вернет статус 204
+
 ### Регистрация нового пользователя и/или получение кода подтверждения:
 ```
 POST /api/v1/auth/signup/
