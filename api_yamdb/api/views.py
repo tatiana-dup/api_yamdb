@@ -76,7 +76,6 @@ class UsersViewSet(viewsets.ModelViewSet):
             raise MethodNotAllowed('PUT')
         return super().update(request, *args, **kwargs)
 
-
 class ObtainTokenView(APIView):
     """Класс для обработки запроса на получение токена."""
     def post(self, request):
@@ -126,8 +125,11 @@ class TitleViewSet(viewsets.ModelViewSet):
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
+    """Отображение отзыва."""
+
     serializer_class = ReviewSerializer
     permission_classes = (AllowedToEditOrReadOnly,)
+    http_method_names = ('get', 'post', 'patch', 'delete',)
 
     def get_title(self):
         return get_object_or_404(Title, pk=self.kwargs.get('title_id'))
@@ -140,8 +142,11 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
 
 class CommentViewSet(viewsets.ModelViewSet):
+    """Отображение коммента."""
+
     serializer_class = CommentSerializer
     permission_classes = (AllowedToEditOrReadOnly,)
+    http_method_names = ('get', 'post', 'patch', 'delete',)
 
     def get_review(self):
         return get_object_or_404(Review, pk=self.kwargs.get('review_id'))

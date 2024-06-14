@@ -77,6 +77,8 @@ class GenreTitle(models.Model):
 
 
 class Review(models.Model):
+    """Модель отзыва."""
+
     text = models.TextField(verbose_name='Текст отзыва')
     score = models.PositiveSmallIntegerField(
         default=DEFAULT_VALUE,
@@ -122,6 +124,8 @@ class Review(models.Model):
 
 
 class Comment(models.Model):
+    """Модель коммента."""
+
     text = models.TextField('Текст комментария')
     author = models.ForeignKey(
         MdbUser,
