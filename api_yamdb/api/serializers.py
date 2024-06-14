@@ -4,10 +4,10 @@ from django.contrib.auth import get_user_model
 from django.core.validators import RegexValidator
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
-from rest_framework.exceptions import ValidationError
 from rest_framework.validators import UniqueValidator
 from rest_framework_simplejwt.tokens import RefreshToken
 
+from api.mixins import UsernameValidatorMixin
 from reviews.const import MAX_SCORE_VALUE, MIN_SCORE_VALUE
 from reviews.models import (
     Category,
@@ -21,7 +21,7 @@ from reviews.models import (
 User = get_user_model()
 
 
-class SignupSerializer(serializers.Serializer):
+class SignupSerializer(UsernameValidatorMixin, serializers.Serializer):
     """
     Сериализатор для обработки запроса на получение кода подтверждения.
     """
@@ -33,15 +33,8 @@ class SignupSerializer(serializers.Serializer):
             message=("В юзернейме допустимо использовать только "
                      "латинские буквы, цифры или @/./+/-/_ ."))])
 
-    def validate_username(self, value):
-        if value.lower() == "me":
-            raise ValidationError(
-                "Вы не можете выбрать юзернейм 'me', "
-                "выберите другой юзернейм.")
-        return value
 
-
-class UsersSerializer(serializers.ModelSerializer):
+class UsersSerializer(UsernameValidatorMixin, serializers.ModelSerializer):
     """Базовый сериализатор для модели пользователя."""
     username = serializers.CharField(
         max_length=150,
@@ -61,12 +54,6 @@ class UsersSerializer(serializers.ModelSerializer):
         ])
     first_name = serializers.CharField(max_length=150, required=False)
     last_name = serializers.CharField(max_length=150, required=False)
-
-    def validate_username(self, value):
-        if value.lower() == "me":
-            raise ValidationError(
-                "Вы не можете выбрать юзернейм me, выберите другой юзернейм.")
-        return value
 
     class Meta:
         model = User
@@ -121,7 +108,6 @@ class ObtainTokenSerializer(serializers.Serializer):
 
     def get_token_for_user(self, user):
         refresh = RefreshToken.for_user(user)
-
         return {
             'token': str(refresh.access_token),
         }
