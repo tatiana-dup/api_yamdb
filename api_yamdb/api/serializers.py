@@ -114,45 +114,46 @@ class ObtainTokenSerializer(serializers.Serializer):
 
 
 class CategorySerializer(serializers.ModelSerializer):
-
+    """Сериализатор для Категорий."""
     class Meta:
         model = Category
-        exclude = ('id',)
+        fields = ('name', 'slug')
         lookup_field = 'slug'
 
 
 class GenreSerializer(serializers.ModelSerializer):
-
+    """Сериализатор для Жанров."""
     class Meta:
         model = Genre
-        exclude = ('id',)
+        fields = ('name', 'slug')
         lookup_field = 'slug'
 
 
 class TitleSerializer(serializers.ModelSerializer):
-    category = CategorySerializer(read_only=True)
-    genre = GenreSerializer(many=True, read_only=True)
-    rating = serializers.IntegerField(read_only=True)
-
-    class Meta:
-        model = Title
-        fields = '__all__'
-
-
-class TitleSerializerWrite(serializers.ModelSerializer):
+    """Сериализатор для Произведений как для чтения, так и для записи."""
     category = serializers.SlugRelatedField(
         slug_field='slug',
         queryset=Category.objects.all()
     )
     genre = serializers.SlugRelatedField(
         slug_field='slug',
+        queryset=Genre.objects.all(),
         many=True,
-        queryset=Genre.objects.all()
+        allow_empty=False
     )
+    rating = serializers.IntegerField(read_only=True, default=0)
 
     class Meta:
         model = Title
         fields = '__all__'
+
+    def to_representation(self, instance):
+        response = super().to_representation(instance)
+        response['genre'] = GenreSerializer(
+            instance.genre.all(), many=True
+        ).data
+        response['category'] = CategorySerializer(instance.category).data
+        return response
 
 
 class ReviewSerializer(serializers.ModelSerializer):

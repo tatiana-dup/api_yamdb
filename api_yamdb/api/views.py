@@ -21,7 +21,6 @@ from api.serializers import (
     ReviewSerializer,
     SignupSerializer,
     TitleSerializer,
-    TitleSerializerWrite,
     UsersForAdminSerializer,
     UsersForMeSerializer
 )
@@ -126,10 +125,11 @@ class CategoryViewSet(mixins.CreateModelMixin,
                       mixins.DestroyModelMixin,
                       mixins.ListModelMixin,
                       viewsets.GenericViewSet):
+    """Класс для взаимодействия с Категориями."""
     queryset = Category.objects.all().order_by('id')
     serializer_class = CategorySerializer
     permission_classes = (AdminOrReadOnly,)
-    filter_backends = (SearchFilter,)
+    filter_backends = (SearchFilter, OrderingFilter,)
     search_fields = ('name',)
     lookup_field = 'slug'
     ordering = ('id',)
@@ -139,30 +139,25 @@ class GenreViewSet(mixins.CreateModelMixin,
                    mixins.DestroyModelMixin,
                    mixins.ListModelMixin,
                    viewsets.GenericViewSet):
+    """Класс для взаимодействия с Жанрами."""
     queryset = Genre.objects.all().order_by('id')
     serializer_class = GenreSerializer
     permission_classes = (AdminOrReadOnly,)
-    filter_backends = (SearchFilter,)
+    filter_backends = (SearchFilter, OrderingFilter,)
     search_fields = ('name',)
     lookup_field = 'slug'
     ordering = ('id',)
 
 
 class TitleViewSet(viewsets.ModelViewSet):
-    queryset = Title.objects.all()
+    """Класс для взаимодействия с Произведениями."""
+    queryset = Title.objects.annotate(rating=Avg('reviews__score')).all()
+    serializer_class = TitleSerializer
     permission_classes = (AdminOrReadOnly,)
     http_method_names = ('get', 'post', 'patch', 'delete')
     filter_backends = (DjangoFilterBackend, OrderingFilter,)
     filterset_class = TitleFilter
     ordering = ('id',)
-
-    def get_queryset(self):
-        return Title.objects.annotate(rating=Avg('reviews__score'))
-
-    def get_serializer_class(self):
-        if self.action in ('create', 'partial_update'):
-            return TitleSerializerWrite
-        return TitleSerializer
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
