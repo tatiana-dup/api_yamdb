@@ -1,5 +1,6 @@
 from django.contrib.auth import get_user_model
 from django.db.models import Avg
+from django_filters.rest_framework import DjangoFilterBackend
 from django.shortcuts import get_object_or_404
 from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
@@ -112,8 +113,8 @@ class GenreViewSet(mixins.CreateModelMixin,
 class TitleViewSet(viewsets.ModelViewSet):
     queryset = Title.objects.all()
     permission_classes = (AdminOrReadOnly,)
-    filter_backends = (SearchFilter,)
-    search_fields = ('name',)
+    filter_backends = (DjangoFilterBackend,)
+    filterset_fields = ('name', 'year', 'category__slug', 'genre__slug')
 
     def get_queryset(self):
         return Title.objects.annotate(rating=Avg('reviews__score'))

@@ -4,6 +4,7 @@ from users.models import ADMIN, MODERATOR
 
 
 class AdminOrReadOnly(permissions.BasePermission):
+
     def has_permission(self, request, view):
         return (
             request.method in permissions.SAFE_METHODS
