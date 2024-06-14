@@ -3,12 +3,15 @@ from django.db.models import Avg
 from django_filters.rest_framework import DjangoFilterBackend
 from django.shortcuts import get_object_or_404
 from rest_framework import mixins, status, viewsets
+from rest_framework.decorators import action
+from rest_framework.exceptions import MethodNotAllowed
 from rest_framework.filters import SearchFilter
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 
-from api.permissions import AdminOrReadOnly
+from api.permissions import AdminOnly, AdminOrReadOnly
 # from api.permissions_test import RolePermission
 from api.serializers import (
     CategorySerializer,
@@ -19,7 +22,8 @@ from api.serializers import (
     SignupSerializer,
     TitleSerializer,
     TitleSerializerWrite,
-    UsersForAdminSerializer
+    UsersForAdminSerializer,
+    UsersForMeSerializer
 )
 from reviews.models import Category, Genre, Title, Review
 from api.permissions import AllowedToEditOrReadOnly
@@ -29,6 +33,7 @@ User = get_user_model()
 
 
 class UserSignupView(APIView):
+    """Класс для обработки запроса на получение кода подтверждения."""
     def post(self, request):
         serializer = SignupSerializer(data=request.data)
         if serializer.is_valid():
@@ -41,19 +46,39 @@ class UserSignupView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class CreateOrListUsersByAdminViewSet(mixins.CreateModelMixin,
-                                      mixins.ListModelMixin,
-                                      viewsets.GenericViewSet):
+class UsersViewSet(viewsets.ModelViewSet):
+    """Класс для обработки запросов, связанных с пользователем."""
     queryset = User.objects.all()
+    lookup_field = 'username'
     serializer_class = UsersForAdminSerializer
+    permission_classes = (AdminOnly,)
     # permission_classes = (RolePermission,)
     # required_roles = ['admin',]
     filter_backends = (SearchFilter,)
     search_fields = ('username',)
 
+    @action(detail=False,
+            methods=['get', 'patch'],
+            permission_classes=(IsAuthenticated,))
+    def me(self, request):
+        user = request.user
+        if request.method == 'GET':
+            serializer = UsersForMeSerializer(user)
+            return Response(serializer.data)
+        elif request.method == 'PATCH':
+            serializer = UsersForMeSerializer(
+                user, data=request.data, partial=True)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            return Response(serializer.data)
 
+    def update(self, request, *args, **kwargs):
+        if request.method == 'PUT':
+            raise MethodNotAllowed('PUT')
+        return super().update(request, *args, **kwargs)
 
 class ObtainTokenView(APIView):
+    """Класс для обработки запроса на получение токена."""
     def post(self, request):
         serializer = ObtainTokenSerializer(data=request.data)
         if serializer.is_valid():
@@ -101,8 +126,11 @@ class TitleViewSet(viewsets.ModelViewSet):
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
+    """Отображение отзыва."""
+
     serializer_class = ReviewSerializer
     permission_classes = (AllowedToEditOrReadOnly,)
+    http_method_names = ('get', 'post', 'patch', 'delete',)
 
     def get_title(self):
         return get_object_or_404(Title, pk=self.kwargs.get('title_id'))
@@ -115,8 +143,11 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
 
 class CommentViewSet(viewsets.ModelViewSet):
+    """Отображение коммента."""
+
     serializer_class = CommentSerializer
     permission_classes = (AllowedToEditOrReadOnly,)
+    http_method_names = ('get', 'post', 'patch', 'delete',)
 
     def get_review(self):
         return get_object_or_404(Review, pk=self.kwargs.get('review_id'))

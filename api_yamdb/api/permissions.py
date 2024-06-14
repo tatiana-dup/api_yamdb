@@ -14,6 +14,7 @@ class AdminOrReadOnly(permissions.BasePermission):
 
 
 class AllowedToEditOrReadOnly(permissions.BasePermission):
+    """Права на редактирование всем кроме анонима."""
 
     def has_permission(self, request, view):
         return (
@@ -27,4 +28,13 @@ class AllowedToEditOrReadOnly(permissions.BasePermission):
             or obj.author == request.user
             or request.user.role == MODERATOR
             or request.user.role == ADMIN
+        )
+
+
+class AdminOnly(permissions.BasePermission):
+    def has_permission(self, request, view):
+        return (
+            request.user.is_staff
+            or request.user.is_authenticated
+            and request.user.role == ADMIN
         )
