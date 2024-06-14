@@ -16,6 +16,7 @@ from reviews.const import (
 
 
 class BaseCategoryGenre(models.Model):
+    """Абстрактная модель для Категорий и Жанров."""
     name = models.CharField('Название', max_length=256)
     slug = models.SlugField(
         max_length=50,
@@ -35,26 +36,27 @@ class BaseCategoryGenre(models.Model):
 
 
 class Category(BaseCategoryGenre):
-
+    """Модель Категории."""
     class Meta:
         verbose_name = 'категория'
         verbose_name_plural = 'Категории'
 
 
 class Genre(BaseCategoryGenre):
-
+    """Модель Жанра."""
     class Meta:
         verbose_name = 'жанр'
         verbose_name_plural = 'Жанры'
 
 
 class Title(models.Model):
+    """Модель Произведения."""
     name = models.CharField('Название', max_length=256)
     year = models.IntegerField(
         'Год выпуска',
         validators=[MaxValueValidator(timezone.now().year)]
     )
-    description = models.TextField('Описание', null=True, blank=True)
+    description = models.TextField('Описание', blank=True)
     genre = models.ManyToManyField(Genre, through='GenreTitle')
     category = models.ForeignKey(
         Category, on_delete=models.SET_NULL, null=True, related_name='titles'
