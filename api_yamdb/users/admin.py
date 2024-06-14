@@ -5,6 +5,6 @@ from .models import MdbUser
 
 
 UserAdmin.fieldsets += (
-    ('Extra Fields', {'fields': ('bio', 'role')}),
+    ('Дополнительные поля', {'fields': ('bio', 'role')}),
 )
 admin.site.register(MdbUser, UserAdmin)

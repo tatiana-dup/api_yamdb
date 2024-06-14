@@ -1,6 +1,5 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
-from django.utils.translation import gettext_lazy as _
 
 
 USER = 'user'
@@ -9,16 +8,18 @@ ADMIN = 'admin'
 
 
 class MdbUser(AbstractUser):
-    email = models.EmailField(_('email address'), unique=True)
-    first_name = models.CharField(_('first name'), max_length=150, blank=True)
-    bio = models.TextField(_('bio'), blank=True)
+    email = models.EmailField('Емейл', unique=True)
+    first_name = models.CharField('Имя', max_length=150, blank=True)
+    bio = models.TextField('Биография', blank=True)
     ROLE_CHOICES = (
-        (USER, _('User')),
-        (MODERATOR, _('Moderator')),
-        (ADMIN, _('Admin')),
+        (USER, 'Пользователь'),
+        (MODERATOR, 'Модератор'),
+        (ADMIN, 'Администратор'),
     )
-    role = models.CharField(_('role'), max_length=10, choices=ROLE_CHOICES,
+    role = models.CharField('Роль', max_length=10, choices=ROLE_CHOICES,
                             default=USER)
 
     class Meta:
+        verbose_name = 'пользователь'
+        verbose_name_plural = 'Пользователи'
         ordering = ('id',)
