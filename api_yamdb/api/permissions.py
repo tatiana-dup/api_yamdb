@@ -9,7 +9,7 @@ class AdminOrReadOnly(permissions.BasePermission):
         return (
             request.method in permissions.SAFE_METHODS
             or request.user.is_authenticated
-            and request.user.role == ADMIN
+            and (request.user.role == ADMIN or request.user.is_superuser)
         )
 
 
@@ -26,15 +26,18 @@ class AllowedToEditOrReadOnly(permissions.BasePermission):
         return (
             request.method in permissions.SAFE_METHODS
             or obj.author == request.user
+            or request.user.is_superuser
             or request.user.role == MODERATOR
             or request.user.role == ADMIN
         )
 
 
 class AdminOnly(permissions.BasePermission):
+    """
+    Права на выполнение любых запросов для суперпользователя и администартора.
+    """
     def has_permission(self, request, view):
         return (
-            request.user.is_staff
-            or request.user.is_authenticated
-            and request.user.role == ADMIN
+            request.user.is_authenticated
+            and (request.user.role == ADMIN or request.user.is_superuser)
         )

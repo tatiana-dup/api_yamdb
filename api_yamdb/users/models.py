@@ -21,4 +21,4 @@ class MdbUser(AbstractUser):
                             default=USER)
 
     class Meta:
-        ordering = ['id']
+        ordering = ('id',)

@@ -4,7 +4,7 @@ from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
-from rest_framework.exceptions import MethodNotAllowed
+from rest_framework.exceptions import ValidationError
 from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -13,7 +13,6 @@ from rest_framework.views import APIView
 
 from api.filters import TitleFilter
 from api.permissions import AdminOnly, AdminOrReadOnly
-# from api.permissions_test import RolePermission
 from api.serializers import (
     CategorySerializer,
     CommentSerializer,
@@ -38,12 +37,16 @@ class UserSignupView(APIView):
     def post(self, request):
         serializer = SignupSerializer(data=request.data)
         if serializer.is_valid():
-            user = serializer.save()
-            response_data = {
-                "email": user.email,
-                "username": user.username
-            }
-            return Response(response_data, status=status.HTTP_200_OK)
+            try:
+                user = serializer.save()
+                response_data = {
+                    "email": user.email,
+                    "username": user.username
+                }
+                return Response(response_data, status=status.HTTP_200_OK)
+            except ValidationError as e:
+                return Response({"detail": e.detail},
+                                status=status.HTTP_400_BAD_REQUEST)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -53,8 +56,7 @@ class UsersViewSet(viewsets.ModelViewSet):
     lookup_field = 'username'
     serializer_class = UsersForAdminSerializer
     permission_classes = (AdminOnly,)
-    # permission_classes = (RolePermission,)
-    # required_roles = ['admin',]
+    http_method_names = ('get', 'post', 'patch', 'delete')
     filter_backends = (SearchFilter,)
     search_fields = ('username',)
 
@@ -73,10 +75,6 @@ class UsersViewSet(viewsets.ModelViewSet):
             serializer.save()
             return Response(serializer.data)
 
-    def update(self, request, *args, **kwargs):
-        if request.method == 'PUT':
-            raise MethodNotAllowed('PUT')
-        return super().update(request, *args, **kwargs)
 
 class ObtainTokenView(APIView):
     """Класс для обработки запроса на получение токена."""
