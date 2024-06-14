@@ -55,6 +55,7 @@ class UsersViewSet(viewsets.ModelViewSet):
     # required_roles = ['admin',]
     filter_backends = (SearchFilter,)
     search_fields = ('username',)
+    http_method_names = ('get', 'post', 'patch', 'delete')
 
     @action(detail=False,
             methods=['get', 'patch'],
@@ -70,11 +71,6 @@ class UsersViewSet(viewsets.ModelViewSet):
             serializer.is_valid(raise_exception=True)
             serializer.save()
             return Response(serializer.data)
-
-    def update(self, request, *args, **kwargs):
-        if request.method == 'PUT':
-            raise MethodNotAllowed('PUT')
-        return super().update(request, *args, **kwargs)
 
 
 class ObtainTokenView(APIView):
