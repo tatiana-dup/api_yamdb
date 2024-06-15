@@ -147,21 +147,13 @@ class ReviewSerializer(serializers.ModelSerializer):
     def get_method(self):
         return self.context['request'].method
 
-    def validate_score(self, value):
-        if (value > MAX_SCORE_VALUE or value < MIN_SCORE_VALUE):
-            raise serializers.ValidationError(
-                f'Оценка не попадает в допустимый диапазон: {MIN_SCORE_VALUE}'
-                f': {MAX_SCORE_VALUE}'
-            )
-        return value
-
     def validate(self, data):
         if (
-                Review.objects.filter(
+                self.get_method() == 'POST'
+                and Review.objects.filter(
                     title=self.get_title(),
                     author=self.get_user()
                 ).exists()
-                and self.get_method() == 'POST'
         ):
             raise serializers.ValidationError(
                 'Для этого произведения ты уже сделал отзыв!'
@@ -177,7 +169,6 @@ class ReviewSerializer(serializers.ModelSerializer):
             'pub_date',
         )
         model = Review
-        read_only_fields = ('pub_date',)
         extra_kwargs = {'score': {'required': True}}
 
 
@@ -197,4 +188,3 @@ class CommentSerializer(serializers.ModelSerializer):
             'author',
             'pub_date',
         )
-        read_only_fields = ('pub_date',)
