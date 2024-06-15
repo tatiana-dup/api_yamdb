@@ -1,18 +1,9 @@
-import jwt
+from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
-from django.conf import settings
-from django.utils import timezone
-from datetime import timedelta
 
 
 def generate_confirmation_code(user):
-    payload = {
-        'username': user.username,
-        'email': user.email,
-        'exp': timezone.now() + timedelta(hours=1)
-    }
-    confirmation_code = jwt.encode(
-        payload, settings.SECRET_KEY, algorithm='HS256')
+    confirmation_code = default_token_generator.make_token(user)
     return confirmation_code
 
 
