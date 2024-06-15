@@ -12,7 +12,7 @@ from rest_framework.views import APIView
 
 
 from api.filters import TitleFilter
-from api.permissions import AdminOnly, AdminOrReadOnly, AllowedToEditOrReadOnly
+from api.permissions import IsAdmin, IsAdminOrReadOnly, IsAllowedToEditOrReadOnly
 from api.serializers import (
     CategorySerializer,
     CommentSerializer,
@@ -21,8 +21,8 @@ from api.serializers import (
     ReviewSerializer,
     SignupSerializer,
     TitleSerializer,
-    UsersForAdminSerializer,
-    UsersForMeSerializer
+    UsersForMeSerializer,
+    UsersSerializer
 )
 from api.utils import send_conform_mail
 from reviews.models import Category, Genre, Review, Title
@@ -88,8 +88,8 @@ class UsersViewSet(viewsets.ModelViewSet):
     """Класс для обработки запросов, связанных с пользователем."""
     queryset = User.objects.all()
     lookup_field = 'username'
-    serializer_class = UsersForAdminSerializer
-    permission_classes = (AdminOnly,)
+    serializer_class = UsersSerializer
+    permission_classes = (IsAdmin,)
     http_method_names = ('get', 'post', 'patch', 'delete')
     filter_backends = (SearchFilter,)
     search_fields = ('username',)
@@ -114,11 +114,10 @@ class ObtainTokenView(APIView):
     """Класс для обработки запроса на получение токена."""
     def post(self, request):
         serializer = ObtainTokenSerializer(data=request.data)
-        if serializer.is_valid():
-            user = serializer.validated_data['user']
-            token = serializer.get_token_for_user(user)
-            return Response(token, status=status.HTTP_200_OK)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.validated_data['user']
+        token = serializer.get_token_for_user(user)
+        return Response(token, status=status.HTTP_200_OK)
 
 
 class CategoryViewSet(mixins.CreateModelMixin,
@@ -128,7 +127,7 @@ class CategoryViewSet(mixins.CreateModelMixin,
     """Класс для взаимодействия с Категориями."""
     queryset = Category.objects.all().order_by('id')
     serializer_class = CategorySerializer
-    permission_classes = (AdminOrReadOnly,)
+    permission_classes = (IsAdminOrReadOnly,)
     filter_backends = (SearchFilter, OrderingFilter,)
     search_fields = ('name',)
     lookup_field = 'slug'
@@ -142,7 +141,7 @@ class GenreViewSet(mixins.CreateModelMixin,
     """Класс для взаимодействия с Жанрами."""
     queryset = Genre.objects.all().order_by('id')
     serializer_class = GenreSerializer
-    permission_classes = (AdminOrReadOnly,)
+    permission_classes = (IsAdminOrReadOnly,)
     filter_backends = (SearchFilter, OrderingFilter,)
     search_fields = ('name',)
     lookup_field = 'slug'
@@ -153,7 +152,7 @@ class TitleViewSet(viewsets.ModelViewSet):
     """Класс для взаимодействия с Произведениями."""
     queryset = Title.objects.annotate(rating=Avg('reviews__score')).all()
     serializer_class = TitleSerializer
-    permission_classes = (AdminOrReadOnly,)
+    permission_classes = (IsAdminOrReadOnly,)
     http_method_names = ('get', 'post', 'patch', 'delete')
     filter_backends = (DjangoFilterBackend, OrderingFilter,)
     filterset_class = TitleFilter
@@ -164,7 +163,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
     """Отображение отзыва."""
 
     serializer_class = ReviewSerializer
-    permission_classes = (AllowedToEditOrReadOnly,)
+    permission_classes = (IsAllowedToEditOrReadOnly,)
     http_method_names = ('get', 'post', 'patch', 'delete',)
 
     def get_title(self):
@@ -181,7 +180,7 @@ class CommentViewSet(viewsets.ModelViewSet):
     """Отображение коммента."""
 
     serializer_class = CommentSerializer
-    permission_classes = (AllowedToEditOrReadOnly,)
+    permission_classes = (IsAllowedToEditOrReadOnly,)
     http_method_names = ('get', 'post', 'patch', 'delete',)
 
     def get_review(self):

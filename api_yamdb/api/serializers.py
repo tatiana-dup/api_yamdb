@@ -1,13 +1,10 @@
 import jwt
 from django.conf import settings
 from django.contrib.auth import get_user_model
-from django.core.validators import RegexValidator
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
-from rest_framework.validators import UniqueValidator
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from api.mixins import UsernameValidatorMixin
 from reviews.const import MAX_SCORE_VALUE, MIN_SCORE_VALUE
 from reviews.models import (
     Category,
@@ -16,56 +13,30 @@ from reviews.models import (
     Review,
     Title,
 )
+from users.constants import EMAIL_MAX_LENGTH, USERNAME_MAX_LENGTH
+from users.validators import validate_username
 
 
 User = get_user_model()
 
 
-class SignupSerializer(UsernameValidatorMixin, serializers.Serializer):
+class SignupSerializer(serializers.Serializer):
     """
     Сериализатор для обработки запроса на получение кода подтверждения.
     """
-    email = serializers.EmailField(max_length=254)
+    email = serializers.EmailField(max_length=EMAIL_MAX_LENGTH)
     username = serializers.CharField(
-        max_length=150,
-        validators=[RegexValidator(
-            regex=r'^[\w.@+-]+\Z',
-            message=("В юзернейме допустимо использовать только "
-                     "латинские буквы, цифры или @/./+/-/_ ."))])
+        max_length=USERNAME_MAX_LENGTH,
+        validators=[validate_username])
 
 
-class UsersSerializer(UsernameValidatorMixin, serializers.ModelSerializer):
+class UsersSerializer(serializers.ModelSerializer):
     """Базовый сериализатор для модели пользователя."""
-    username = serializers.CharField(
-        max_length=150,
-        validators=[
-            RegexValidator(
-                regex=r'^[\w.@+-]+\Z',
-                message=("В юзернейме допустимо использовать только "
-                         "латинские буквы, цифры или @/./+/-/_ .")),
-            UniqueValidator(queryset=User.objects.all(),
-                            message='Этот юзернейм уже занят.')
-        ])
-    email = serializers.EmailField(
-        max_length=254,
-        validators=[
-            UniqueValidator(queryset=User.objects.all(),
-                            message='Этот емейл уже занят.')
-        ])
-    first_name = serializers.CharField(max_length=150, required=False)
-    last_name = serializers.CharField(max_length=150, required=False)
 
     class Meta:
         model = User
         fields = (
             'username', 'email', 'first_name', 'last_name', 'bio', 'role')
-
-
-class UsersForAdminSerializer(UsersSerializer):
-    """
-    Сериализатор для модели пользователя, предназначенный для запросов,
-    полученных от администратора.
-    """
 
 
 class UsersForMeSerializer(UsersSerializer):
@@ -91,10 +62,10 @@ class ObtainTokenSerializer(serializers.Serializer):
             payload = jwt.decode(
                 value, settings.SECRET_KEY, algorithms=['HS256'])
         except jwt.ExpiredSignatureError:
-            raise serializers.ValidationError("Код подтверждения истек.")
+            raise serializers.ValidationError('Код подтверждения истек.')
         except jwt.InvalidTokenError:
             raise serializers.ValidationError(
-                "Недействительный код подтверждения.")
+                'Недействительный код подтверждения.')
 
         self.username = payload.get('username')
         return value
@@ -102,7 +73,7 @@ class ObtainTokenSerializer(serializers.Serializer):
     def validate(self, data):
         if data.get('username') != self.username:
             raise serializers.ValidationError(
-                "Неверный код подтверждения или юзернейм.")
+                'Неверный код подтверждения или юзернейм.')
         data['user'] = self.user
         return data
 
