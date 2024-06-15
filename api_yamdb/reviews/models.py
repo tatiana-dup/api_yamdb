@@ -1,10 +1,8 @@
 from django.core.validators import (
-    RegexValidator,
     MaxValueValidator,
     MinValueValidator,
 )
 from django.db import models
-from django.utils import timezone
 
 from users.models import MdbUser
 from reviews.const import (
@@ -12,21 +10,15 @@ from reviews.const import (
     MAX_SCORE_VALUE,
     MIN_SCORE_VALUE,
     TEXT_LENGTH,
+    NAME_LENGTH,
 )
+from reviews.validators import validate_year
 
 
 class BaseCategoryGenre(models.Model):
     """Абстрактная модель для Категорий и Жанров."""
-    name = models.CharField('Название', max_length=256)
-    slug = models.SlugField(
-        max_length=50,
-        unique=True,
-        validators=[RegexValidator(
-            regex=r'^[-a-zA-Z0-9_]+$',
-            message=('Slug может содержать только буквы, '
-                     'цифры, дефисы и подчеркивания.')
-        )]
-    )
+    name = models.CharField('Название', max_length=NAME_LENGTH)
+    slug = models.SlugField(max_length=50, unique=True)
 
     class Meta:
         abstract = True
@@ -51,10 +43,10 @@ class Genre(BaseCategoryGenre):
 
 class Title(models.Model):
     """Модель Произведения."""
-    name = models.CharField('Название', max_length=256)
+    name = models.CharField('Название', max_length=NAME_LENGTH)
     year = models.IntegerField(
         'Год выпуска',
-        validators=[MaxValueValidator(timezone.now().year)]
+        validators=[validate_year]
     )
     description = models.TextField('Описание', blank=True)
     genre = models.ManyToManyField(Genre, through='GenreTitle')
@@ -63,6 +55,7 @@ class Title(models.Model):
     )
 
     class Meta:
+        ordering = ('-year',)
         verbose_name = 'произведение'
         verbose_name_plural = 'Произведения'
 

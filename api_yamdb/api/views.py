@@ -120,32 +120,28 @@ class ObtainTokenView(APIView):
         return Response(token, status=status.HTTP_200_OK)
 
 
-class CategoryViewSet(mixins.CreateModelMixin,
-                      mixins.DestroyModelMixin,
-                      mixins.ListModelMixin,
-                      viewsets.GenericViewSet):
+class BaseCategoryGenreViewSet(mixins.CreateModelMixin,
+                               mixins.DestroyModelMixin,
+                               mixins.ListModelMixin,
+                               viewsets.GenericViewSet):
+    """Базовый класс для взаимодействия с категориями и жанрами."""
+    permission_classes = (IsAdminOrReadOnly,)
+    filter_backends = (SearchFilter, OrderingFilter,)
+    search_fields = ('name',)
+    lookup_field = 'slug'
+    ordering = ('slug',)
+
+
+class CategoryViewSet(BaseCategoryGenreViewSet):
     """Класс для взаимодействия с Категориями."""
-    queryset = Category.objects.all().order_by('id')
+    queryset = Category.objects.all()
     serializer_class = CategorySerializer
-    permission_classes = (IsAdminOrReadOnly,)
-    filter_backends = (SearchFilter, OrderingFilter,)
-    search_fields = ('name',)
-    lookup_field = 'slug'
-    ordering = ('id',)
 
 
-class GenreViewSet(mixins.CreateModelMixin,
-                   mixins.DestroyModelMixin,
-                   mixins.ListModelMixin,
-                   viewsets.GenericViewSet):
+class GenreViewSet(BaseCategoryGenreViewSet):
     """Класс для взаимодействия с Жанрами."""
-    queryset = Genre.objects.all().order_by('id')
+    queryset = Genre.objects.all()
     serializer_class = GenreSerializer
-    permission_classes = (IsAdminOrReadOnly,)
-    filter_backends = (SearchFilter, OrderingFilter,)
-    search_fields = ('name',)
-    lookup_field = 'slug'
-    ordering = ('id',)
 
 
 class TitleViewSet(viewsets.ModelViewSet):
@@ -156,7 +152,7 @@ class TitleViewSet(viewsets.ModelViewSet):
     http_method_names = ('get', 'post', 'patch', 'delete')
     filter_backends = (DjangoFilterBackend, OrderingFilter,)
     filterset_class = TitleFilter
-    ordering = ('id',)
+    ordering = ('-year',)
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
