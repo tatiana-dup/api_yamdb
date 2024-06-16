@@ -1,6 +1,7 @@
 import os
 import csv
 
+from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand
 from django.db import transaction
 
@@ -12,7 +13,8 @@ from reviews.models import (
     Review,
     Title,
 )
-from users.models import MdbUser
+
+User = get_user_model()
 
 
 class Command(BaseCommand):
@@ -132,7 +134,7 @@ class Command(BaseCommand):
         with open(filepath, newline='', encoding='utf-8') as csvfile:
             reader = csv.DictReader(csvfile)
             for row in reader:
-                MdbUser.objects.create(
+                User.objects.create(
                     id=row['id'],
                     username=row['username'],
                     email=row['email'],
