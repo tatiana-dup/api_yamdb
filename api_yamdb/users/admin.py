@@ -4,6 +4,7 @@ from django.contrib.auth.admin import UserAdmin
 from users.models import MdbUser
 
 
+@admin.register(MdbUser)
 class MdbUserAdmin(UserAdmin):
 
     list_display = ('username', 'email', 'first_name', 'last_name', 'role',
@@ -20,6 +21,3 @@ class MdbUserAdmin(UserAdmin):
                        'user_permissions')}),
         ('Важные даты', {'fields': ('last_login', 'date_joined')}),
     )
-
-
-admin.site.register(MdbUser, MdbUserAdmin)
