@@ -1,3 +1,4 @@
+from django.contrib.auth import get_user_model
 from django.core.validators import (
     MaxValueValidator,
     MinValueValidator,
@@ -14,6 +15,7 @@ from reviews.const import (
 )
 from reviews.validators import validate_year
 
+User = get_user_model()
 
 class BaseCategoryGenre(models.Model):
     """Абстрактная модель для Категорий и Жанров."""
@@ -90,7 +92,7 @@ class Review(models.Model):
         verbose_name='Оценка',
     )
     author = models.ForeignKey(
-        MdbUser,
+        User,
         on_delete=models.CASCADE,
         related_name='reviews',
         verbose_name='Автор',
@@ -123,7 +125,7 @@ class Comment(models.Model):
 
     text = models.TextField('Текст комментария')
     author = models.ForeignKey(
-        MdbUser,
+        User,
         on_delete=models.CASCADE,
         related_name='comments',
         verbose_name='Автор',
