@@ -5,7 +5,6 @@ from django.core.validators import (
 )
 from django.db import models
 
-from users.models import MdbUser
 from reviews.const import (
     DEFAULT_VALUE,
     MAX_SCORE_VALUE,
