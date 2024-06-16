@@ -5,7 +5,7 @@ from django.core.validators import (
 )
 from django.db import models
 
-from reviews.const import (
+from reviews.constants import (
     DEFAULT_VALUE,
     MAX_SCORE_VALUE,
     MIN_SCORE_VALUE,
@@ -14,7 +14,9 @@ from reviews.const import (
 )
 from reviews.validators import validate_year
 
+
 User = get_user_model()
+
 
 class BaseCategoryGenre(models.Model):
     """Абстрактная модель для Категорий и Жанров."""

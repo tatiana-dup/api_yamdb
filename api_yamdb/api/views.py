@@ -11,7 +11,6 @@ from rest_framework.views import APIView
 
 
 from api.filters import TitleFilter
-from api.mixins import BaseCategoryGenreViewSet
 from api.permissions import (
     IsAdmin,
     IsAdminOrReadOnly,
@@ -28,7 +27,7 @@ from api.serializers import (
     UsersForMeSerializer,
     UsersSerializer
 )
-from api.utils import send_conform_mail
+from api.viewsets import BaseCategoryGenreViewSet
 from reviews.models import Category, Genre, Review, Title
 
 
