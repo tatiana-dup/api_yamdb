@@ -2,7 +2,7 @@ from django.contrib.auth import get_user_model
 from django.db.models import Avg
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import mixins, status, viewsets
+from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.permissions import IsAuthenticated
@@ -11,18 +11,24 @@ from rest_framework.views import APIView
 
 
 from api.filters import TitleFilter
-from api.permissions import (IsAdmin,
-                             IsAdminOrReadOnly,
-                             IsAllowedToEditOrReadOnly)
-from api.serializers import (CategorySerializer,
-                             CommentSerializer,
-                             ObtainTokenSerializer,
-                             GenreSerializer,
-                             ReviewSerializer,
-                             SignupSerializer,
-                             TitleSerializer,
-                             UsersForMeSerializer,
-                             UsersSerializer)
+from api.mixins import BaseCategoryGenreViewSet
+from api.permissions import (
+    IsAdmin,
+    IsAdminOrReadOnly,
+    IsAllowedToEditOrReadOnly
+)
+from api.serializers import (
+    CategorySerializer,
+    CommentSerializer,
+    ObtainTokenSerializer,
+    GenreSerializer,
+    ReviewSerializer,
+    SignupSerializer,
+    TitleSerializer,
+    UsersForMeSerializer,
+    UsersSerializer
+)
+from api.utils import send_conform_mail
 from reviews.models import Category, Genre, Review, Title
 
 
@@ -84,18 +90,6 @@ class ObtainTokenView(APIView):
         return Response(token, status=status.HTTP_200_OK)
 
 
-class BaseCategoryGenreViewSet(mixins.CreateModelMixin,
-                               mixins.DestroyModelMixin,
-                               mixins.ListModelMixin,
-                               viewsets.GenericViewSet):
-    """Базовый класс для взаимодействия с категориями и жанрами."""
-    permission_classes = (IsAdminOrReadOnly,)
-    filter_backends = (SearchFilter, OrderingFilter,)
-    search_fields = ('name',)
-    lookup_field = 'slug'
-    ordering = ('slug',)
-
-
 class CategoryViewSet(BaseCategoryGenreViewSet):
     """Класс для взаимодействия с Категориями."""
     queryset = Category.objects.all()
@@ -116,7 +110,7 @@ class TitleViewSet(viewsets.ModelViewSet):
     http_method_names = ('get', 'post', 'patch', 'delete')
     filter_backends = (DjangoFilterBackend, OrderingFilter,)
     filterset_class = TitleFilter
-    ordering = ('-year',)
+    ordering = ('-year', 'name',)
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
